@@ -1,0 +1,328 @@
+{
+  "info": {
+    "_postman_id": "ca7d5775-c853-4256-a437-887c4e5533bd",
+    "name": "APIBARBERIAQC",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54533663"
+  },
+  "item": [
+    {
+      "name": "REGISTRO",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"nombre\": \"Ramiro\",\r\n  \"apellido\": \"Simo\",\r\n  \"email\": \"ramiro@mail.com\",\r\n  \"telefono\": \"34155346436\",\r\n  \"password\": \"15345564\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/registro",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "registro"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "LOGIN",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"email\": \"juan@mail.com\", \"password\": \"1234\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/login",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "VERMISTURNOS",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/clientes/1/turnos",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "clientes",
+            "1",
+            "turnos"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "VERTURNOSDISPONIBLES(falta)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/turnos/disponibles?fecha=2025-06-01&idProfesional=1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "turnos",
+            "disponibles"
+          ],
+          "query": [
+            {
+              "key": "fecha",
+              "value": "2025-06-01"
+            },
+            {
+              "key": "idProfesional",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "RESERVARTURNO",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"idCliente\": 1, \"idProfesional\": 1, \"idServicio\": 1, \"fecha\": \"2025-06-01\", \"horaInicio\": \"10:00\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/turnos",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "turnos"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "CANCELARTURNO",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/turnos/1/cancelar",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "turnos",
+            "1",
+            "cancelar"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "CARGARPROFESIONAL",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"nombre\": \"Carlos\", \"apellido\": \"López\", \"email\": \"carlos@barberia.com\", \"telefono\": \"3415009999\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "POST http://localhost:3000/profesionales",
+          "protocol": "POST http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "profesionales"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "BAJAPROFESIONAL",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/profesionales/4",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "profesionales",
+            "4"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "EDITARHORARIOS",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"horarios\": [\r\n    { \"diaSemana\": 1, \"horaEntrada\": \"09:00\", \"horaSalida\": \"18:00\" },\r\n    { \"diaSemana\": 2, \"horaEntrada\": \"09:00\", \"horaSalida\": \"18:00\" },\r\n    { \"diaSemana\": 3, \"horaEntrada\": \"09:00\", \"horaSalida\": \"18:00\" },\r\n    { \"diaSemana\": 4, \"horaEntrada\": \"09:00\", \"horaSalida\": \"18:00\" },\r\n    { \"diaSemana\": 5, \"horaEntrada\": \"09:00\", \"horaSalida\": \"14:00\" }\r\n  ]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/profesionales/1/horarios",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "profesionales",
+            "1",
+            "horarios"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "VERAGENDAPROFESIONAL",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/profesionales/1/agenda?fecha=2025-06-01",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "profesionales",
+            "1",
+            "agenda"
+          ],
+          "query": [
+            {
+              "key": "fecha",
+              "value": "2025-06-01"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "CREARSERVICIO",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"nombre\": \"Corte de pelo\", \"precio\": 2500, \"duracion_minutos\": 30 }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/servicios",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "servicios"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "ACTUALIZARSERVICIO",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"nombre\": \"Corte de pelo\", \"precio\": 3000, \"duracion_minutos\": 30 }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/servicios/1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "servicios",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
