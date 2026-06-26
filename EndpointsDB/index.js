@@ -1,6 +1,8 @@
 const express = require("express");
 const sql = require("mssql");
 const app = express();
+const jwt = require("jsonwebtoken");
+const JWT_SECRET = "RamirFSim2026";
 
 app.use(express.json());
 
@@ -20,6 +22,119 @@ async function getPool() {
   if (!pool) pool = await sql.connect(dbConfig);
   return pool;
 }
+
+function adminAuthJWT(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Token requerido." });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    if (decoded.rol !== "admin") {
+      return res.status(403).json({ error: "Acceso denegado." });
+    }
+
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({ error: "Token inválido o expirado." });
+  }
+}
+
+
+
+async function basicAuthMiddleware(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Basic ')) {
+    res.set('WWW-Authenticate', 'Basic realm="Barberia"');
+    return res.status(401).send('Authentication required');
+  }
+
+  const base64Credentials = authHeader.split(' ')[1];
+  const credentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
+  const [email, password] = credentials.split(':');
+
+  try {
+    const db = await getPool();
+
+    // 1. busco en admin
+    const adminResult = await db.request()
+      .input("email", sql.VarChar, email)
+      .input("password", sql.VarChar, password)
+      .query("select idadmin, nombre from Administrador where email = @email and password = @password");
+
+    if (adminResult.recordset.length > 0) {
+        req.user = adminResult.recordset[0];
+        req.user.rol = "admin";
+        return next();
+    }
+
+    // 2. busco en cliente
+    const clienteResult = await db.request()
+      .input("email", sql.VarChar, email)
+      .input("password", sql.VarChar, password)
+      .query("select idcliente, nombre from cliente where email = @email and password = @password");
+
+    if (clienteResult.recordset.length > 0) {
+    req.user = clienteResult.recordset[0];
+    req.user.rol = "cliente";
+    return next();
+    }
+
+    res.set('WWW-Authenticate', 'Basic realm="Barberia"');
+    return res.status(401).send('Invalid credentials');
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send('Error al validar credenciales.');
+  }
+}
+
+
+
+
+
+
+async function adminBasicAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Basic ')) {
+    res.set('WWW-Authenticate', 'Basic realm="Barberia Admin"');
+    return res.status(401).send('Authentication required');
+  }
+
+  const base64Credentials = authHeader.split(' ')[1];
+  const credentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
+  const [usuario, password] = credentials.split(':');
+
+  try {
+    const db = await getPool();
+    const result = await db.request()
+      .input("usuario", sql.VarChar, usuario)
+      .input("password", sql.VarChar, password)
+      .query("select idadmin, nombre from Administrador where usuario = @usuario and password = @password");
+
+    if (result.recordset.length === 0) {
+      res.set('WWW-Authenticate', 'Basic realm="Barberia Admin"');
+      return res.status(401).send('Invalid credentials');
+    }
+
+    req.admin = result.recordset[0];
+    next();
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send('Error al validar credenciales.');
+  }
+}
+
+
 
 app.post("/registro", async (req, res) => {
   const { nombre, apellido, email, telefono, password } = req.body;
@@ -44,25 +159,27 @@ app.post("/registro", async (req, res) => {
 });
 
 // LOGIN
-app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const db = await getPool();
-    const result = await db.request()
-      .input("email", sql.VarChar, email)
-      .input("password", sql.VarChar, password)
-      .query("SELECT idCliente, nombre FROM Cliente WHERE email = @email AND password = @password");
- 
-    if (result.recordset.length === 0) {
-      return res.status(401).json({ error: "Email o password incorrectos." });
-    }
-    res.json({ mensaje: "Login exitoso.", cliente: result.recordset[0] });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error al iniciar sesión." });
-  }
+app.post("/login/cliente", basicAuthMiddleware, (req, res) => {
+  res.json({
+    mensaje: "Login exitoso.",
+    rol: req.user.rol,
+    usuario: req.user
+  });
 });
- 
+
+///LOGIN ADMIN
+
+app.post("/admin/login", adminBasicAuth, (req, res) => {
+  const token = jwt.sign(
+    { idadmin: req.admin.idadmin, nombre: req.admin.nombre, rol: "admin" },
+    JWT_SECRET,
+    { expiresIn: "2h" }
+  );
+
+  res.json({ mensaje: "Login exitoso.", token });
+});
+
+
 // VER MIS TURNOS
 app.get("/clientes/:idCliente/turnos", async (req, res) => {
   try {
@@ -85,6 +202,10 @@ app.get("/clientes/:idCliente/turnos", async (req, res) => {
     res.status(500).json({ error: "Error al obtener turnos." });
   }
 });
+
+
+
+
  
 // VER TURNOS DISPONIBLES
 app.get("/turnos/disponibles", async (req, res) => {
@@ -152,7 +273,7 @@ app.patch("/turnos/:id/cancelar", async (req, res) => {
 // ── ADMIN ──
  
 // CARGAR PROFESIONAL
-app.post("/profesionales", async (req, res) => {
+app.post("/profesionales", adminAuthJWT, async (req, res) => {
   const { nombre, apellido, email, telefono } = req.body;
   try {
     const db = await getPool();
@@ -172,6 +293,7 @@ app.post("/profesionales", async (req, res) => {
     res.status(500).json({ error: "Error al registrar profesional." });
   }
 });
+
  
 // BAJAR PROFESIONAL
 app.delete("/profesionales/:id", async (req, res) => {
