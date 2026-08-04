@@ -2,7 +2,7 @@ const express = require("express");
 
 const { sql, config, getPool } = require("./conexion");
 
-const { basicAuthMiddleware, jwtMiddleware, JWT_SECRET } = require("./auth");
+const { jwtMiddleware, JWT_SECRET } = require("./auth");
 
 const jwt = require("jsonwebtoken");
 
@@ -36,14 +36,23 @@ app.post("/registro", async (req, res) => {
 });
 
 app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Basic ")) {
+    return res.status(401).json({ error: "Se requiere autenticación básica (Basic Auth)." });
+  }
+
+  const base64Credentials = authHeader.split(" ")[1];
+  const credentials = Buffer.from(base64Credentials, "base64").toString("utf-8");
+  const [email, password] = credentials.split(":");
+
   try {
     const db = await getPool();
     const result = await db.request()
       .input("email", sql.VarChar, email)
       .input("password", sql.VarChar, password)
       .query("SELECT idCliente, nombre FROM Cliente WHERE email = @email AND password = @password");
- 
+
     if (result.recordset.length === 0) {
       return res.status(401).json({ error: "Email o password incorrectos." });
     }
@@ -111,17 +120,22 @@ app.get("/turnos/disponibles", async (req, res) => {
 });
 
 // RESERVAR TURNO
-app.post("/turnos", async (req, res) => {
+app.post("/turnos", jwtMiddleware, async (req, res) => {
   const { idCliente, idProfesional, idServicio, fecha, horaInicio } = req.body;
+
+  if (req.user.idCliente != idCliente) {
+    return res.status(403).json({ error: "No podés reservar un turno a nombre de otro cliente." });
+  }
+
   try {
     const db = await getPool();
- 
+
     const servicio = await db.request()
       .input("idServicio", sql.Int, idServicio)
       .query("SELECT duracion_minutos, precio FROM Servicio WHERE idServicio = @idServicio");
- 
+
     const { duracion_minutos, precio } = servicio.recordset[0];
- 
+
     const result = await db.request()
       .input("idProfesional", sql.Int, idProfesional)
       .input("idCliente", sql.Int, idCliente)
@@ -135,7 +149,7 @@ app.post("/turnos", async (req, res) => {
         OUTPUT INSERTED.idTurno
         VALUES (@idProfesional, @idCliente, @idServicio, @fecha, @horaInicio, @duracion, @precio)
       `);
- 
+
     res.status(201).json({ mensaje: "Turno reservado.", idTurno: result.recordset[0].idTurno });
   } catch (error) {
     console.error(error);
@@ -145,7 +159,7 @@ app.post("/turnos", async (req, res) => {
 
 
 // CANCELAR TURNO
-app.patch("/turnos/:id/cancelar", async (req, res) => {
+app.patch("/turnos/:id/cancelar", jwtMiddleware, async (req, res) => {
   try {
     const db = await getPool();
     await db.request()
@@ -163,7 +177,7 @@ app.patch("/turnos/:id/cancelar", async (req, res) => {
  
 // CARGAR PROFESIONAL
 
-app.post("/profesionales", basicAuthMiddleware, async (req, res) => {
+app.post("/profesionales", jwtMiddleware, async (req, res) => {
   const { nombre, apellido, email, telefono } = req.body;
   try {
     const db = await getPool();
@@ -185,7 +199,7 @@ app.post("/profesionales", basicAuthMiddleware, async (req, res) => {
 });
 
 // BAJAR PROFESIONAL
-app.delete("/profesionales/:id", basicAuthMiddleware, async (req, res) => {
+app.delete("/profesionales/:id", jwtMiddleware, async (req, res) => {
   try {
     const db = await getPool();
     await db.request()
@@ -199,7 +213,7 @@ app.delete("/profesionales/:id", basicAuthMiddleware, async (req, res) => {
 });
 
 // EDITAR HORARIOS
-app.put("/profesionales/:id/horarios", basicAuthMiddleware, async (req, res) => {
+app.put("/profesionales/:id/horarios", jwtMiddleware, async (req, res) => {
   const { horarios } = req.body;
   const db = await getPool();
   const transaction = new sql.Transaction(db);
@@ -228,7 +242,7 @@ app.put("/profesionales/:id/horarios", basicAuthMiddleware, async (req, res) => 
 });
 
 // VER AGENDA
-app.get("/profesionales/:id/agenda", basicAuthMiddleware, async (req, res) => {
+app.get("/profesionales/:id/agenda", jwtMiddleware, async (req, res) => {
   const { fecha } = req.query;
   try {
     const db = await getPool();
@@ -253,7 +267,7 @@ app.get("/profesionales/:id/agenda", basicAuthMiddleware, async (req, res) => {
 });
 
 // CREAR SERVICIO
-app.post("/servicios", basicAuthMiddleware, async (req, res) => {
+app.post("/servicios", jwtMiddleware, async (req, res) => {
   const { nombre, precio, duracion_minutos } = req.body;
   try {
     const db = await getPool();
@@ -274,7 +288,7 @@ app.post("/servicios", basicAuthMiddleware, async (req, res) => {
 });
 
 // ACTUALIZAR PRECIO / SERVICIO
-app.patch("/servicios/:id", basicAuthMiddleware, async (req, res) => {
+app.patch("/servicios/:id", jwtMiddleware, async (req, res) => {
   const { nombre, precio, duracion_minutos } = req.body;
   try {
     const db = await getPool();
@@ -292,7 +306,7 @@ app.patch("/servicios/:id", basicAuthMiddleware, async (req, res) => {
 });
 
 // ELIMINAR SERVICIO
-app.delete("/servicios/:id", basicAuthMiddleware, async (req, res) => {
+app.delete("/servicios/:id", jwtMiddleware, async (req, res) => {
   try {
     const db = await getPool();
     await db.request()
