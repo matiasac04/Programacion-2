@@ -1,7 +1,7 @@
 ## **Descripción del Proyecto**
 
 **Docente:** Sebastián Bruselario  
-**Integrantes del grupo:** Arminio Juan Pablo · Cuesta Gonzalo · Lagreca Agustín · Matias Alvarez · Ramiro Simó
+**Integrantes del grupo:** Arminio Juan Pablo · Cuesta Gonzalo · Lagreca Agustín · Matias Alvarez 
 
 ---
 
