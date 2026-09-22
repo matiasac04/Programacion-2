@@ -43,7 +43,7 @@ Spa de barbería (reservas de turnos) en React 19 + Vite 8, sin TypeScript, con 
 
 ## Entorno
 - Node `^20.19.0 || >=22.12.0` (requisito de Vite 8).
-- `server/.gitignore` cubre `node_modules`, `.env` y `*.log`. `dist/` y `node_modules/` en `.gitignore` raíz. Es repo git; el remoto es https://github.com/matiasac04/Barberia.git (rama `main`).
+- `server/.gitignore` cubre `node_modules`, `.env` y `*.log`. `dist/` y `node_modules/` en `.gitignore` raíz. Es repo git; el remoto es https://github.com/matiasac04/Programacion-2 (rama `main`).
 - No commitear `server/.env` (credenciales reales de la DB y del JWT).
 
 ## Reglas del asistente
@@ -51,9 +51,9 @@ Spa de barbería (reservas de turnos) en React 19 + Vite 8, sin TypeScript, con 
 - Siempre explicar qué se va a hacer y esperar el ok antes de proceder.
 
 ## Git / entorno (importante)
-- El repo `Barberia` en GitHub se subió con force push y estructura corregida: la raíz del repo es el frontend (`index.html`, `package.json`, `vite.config.js`, `src/`, `server/`, `BD/`). NO anidado dentro de subcarpetas. Es la estructura definitiva; no reestructurar.
+- El repo `Programacion-2` en GitHub se subió con force push y estructura corregida: la raíz del repo es el frontend (`index.html`, `package.json`, `vite.config.js`, `src/`, `server/`, `BD/`). NO anidado dentro de subcarpetas. Es la estructura definitiva; no reestructurar.
 - Trabajar y hacer git siempre desde la raíz del repo clonado. Si git no está en el PATH de la terminal, usar la ruta completa del instalador.
-- Cualquier integrante del equipo: clonar con `git clone https://github.com/matiasac04/Barberia.git`. NO hacer `pull`/`push` de historiales viejos ni `push --force` (pisaría la estructura correcta). Si aparece "unrelated histories", resolver con `git fetch origin` + `git reset --hard origin/main`, o re-clonar.
+- Cualquier integrante del equipo: clonar con `git clone https://github.com/matiasac04/Programacion-2`. NO hacer `pull`/`push` de historiales viejos ni `push --force` (pisaría la estructura correcta). Si aparece "unrelated histories", resolver con `git fetch origin` + `git reset --hard origin/main`, o re-clonar.
 
 ## Deploy (en proceso)
 - Objetivo: publicación gratuita = frontend en **Vercel** + backend en **Belmo** (dashboard.belmo.io) porque Koyeb ya no tiene tier gratis (fue absorbida por Mistral) y Render duerme (cold start). Northflank pide tarjeta. Oracle Cloud es la alternativa robusta si Belmo no alcanza.
