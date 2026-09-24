@@ -6,9 +6,9 @@ import Inicio from './components/cliente/Inicio';
 import IniciarSesion from './components/ingreso/IniciarSesion';
 import MisTurnos from './components/cliente/MisTurnos';
 import WhatsApp from './components/comunes/WhatsApp';
-import { initialTakenSlots, timeSlots } from './datos/semilla';
+import { timeSlots } from './datos/semilla';
 import { actualizarProfesional, actualizarServicio, actualizarTurno, cancelarTurno, crearProfesional, crearServicio, eliminarProfesional, eliminarServicio, eliminarTurno, guardarBloqueos, guardarHorarios, loginCliente, obtenerBloqueos, obtenerHorarios, obtenerProfesionales, obtenerServicios, obtenerTurnos, obtenerTurnosCliente, obtenerTurnosDisponibles, obtenerTurnosOcupados, registrarCliente, reservarTurno, verificarToken } from './servicios/api';
-import { canCancelBooking, formatCalendarLabel, getDateBlockedSlots, getWeekdayPattern, getWeeklySlots, isBlockedWeekday, resolveBookingStatus, resolveCalendarDetails, safeClone, toIsoDate } from './utilidades/ayudantes';
+import { canCancelBooking, formatCalendarLabel, getDateBlockedSlots, getWeekdayPattern, getWeeklySlots, isBlockedWeekday, resolveBookingStatus, resolveCalendarDetails, toIsoDate } from './utilidades/ayudantes';
 
 // ── Constantes de calendario ─────────────────────────
 const today = new Date(), calendarStart = new Date(today), calendarEnd = new Date(today);
@@ -158,7 +158,7 @@ function App() {
 
   // ── Disponibilidad del día (slots libres/ocupados) ──
   const takenSlots = useMemo(() => {
-    const snap = safeClone(initialTakenSlots);
+    const snap = {};
     const meter = (barberId, dayKey, time) => {
       if (barberId == null || dayKey == null || !time) return;
       const bs = snap[barberId] ?? (snap[barberId] = {});

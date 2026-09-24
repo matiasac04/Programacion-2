@@ -1,8 +1,6 @@
 // ── Formato de fechas e ISO ───────────────────────────
 const dateFormatter = new Intl.DateTimeFormat('es-AR', { weekday: 'short', day: 'numeric', month: 'short' })
 
-export const safeClone = (value) => (typeof structuredClone === 'function' ? structuredClone(value) : JSON.parse(JSON.stringify(value)))
-
 export const toIsoDate = (value) => {
   const d = value instanceof Date ? value : new Date(`${String(value).trim().split('T')[0]}T00:00:00`)
   if (Number.isNaN(d.getTime())) return ''
@@ -32,7 +30,7 @@ export const resolveCalendarDetails = (bookingDate) => {
 }
 
 // ── Slots y horarios laborales ────────────────────────
-export const SLOT_MINUTES = 30
+const SLOT_MINUTES = 30
 export const WORKING_DAYS = [2, 3, 4, 5, 6]
 const weekdayPatternToDay = { tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 }
 
@@ -63,7 +61,7 @@ export const getWeeklySlots = (horarioLaboral, barberId, weekdayPattern, fallbac
 }
 
 // ── Parseo de turnos y estado ─────────────────────────
-export const parseBookingDateTime = (booking) => {
+const parseBookingDateTime = (booking) => {
   if (!booking?.bookingDate || !booking?.time) return null
 
   let dateStr = String(booking.bookingDate).trim()
