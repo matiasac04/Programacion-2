@@ -1,57 +1,57 @@
-## **Descripción del Proyecto**
+﻿## **Descripci├│n del Proyecto**
 
-**Docente:** Sebastián Bruselario  
-**Integrantes del grupo:** Arminio Juan Pablo · Cuesta Gonzalo · Lagreca Agustín · Matias Alvarez 
+**Docente:** Sebasti├ín Bruselario  
+**Integrantes del grupo:** Arminio Juan Pablo ┬À Cuesta Gonzalo ┬À Lagreca Agust├¡n ┬À Matias Alvarez 
 
 ---
 
  **Problema**
 
-En la actualidad, muchas barberías enfrentan dificultades para gestionar los turnos de sus clientes de manera eficiente y organizada.
-La falta de un sistema adecuado provoca desorden, superposición de horarios y una experiencia poco satisfactoria tanto para los clientes como para el personal.
+En la actualidad, muchas barber├¡as enfrentan dificultades para gestionar los turnos de sus clientes de manera eficiente y organizada.
+La falta de un sistema adecuado provoca desorden, superposici├│n de horarios y una experiencia poco satisfactoria tanto para los clientes como para el personal.
 
-Además, en la mayoría de los casos no existe una herramienta que permita a los usuarios conocer la disponibilidad de los barberos, elegir al profesional de su preferencia y recibir confirmaciones automáticas de sus reservas.
-Esto genera demoras, errores de comunicación y pérdida de tiempo tanto para el negocio como para los clientes.
+Adem├ís, en la mayor├¡a de los casos no existe una herramienta que permita a los usuarios conocer la disponibilidad de los barberos, elegir al profesional de su preferencia y recibir confirmaciones autom├íticas de sus reservas.
+Esto genera demoras, errores de comunicaci├│n y p├®rdida de tiempo tanto para el negocio como para los clientes.
 
-Por otra parte, el personal de la barbería suele administrar los turnos de forma manual, dificultando la organización diaria y el control de la agenda de trabajo.
+Por otra parte, el personal de la barber├¡a suele administrar los turnos de forma manual, dificultando la organizaci├│n diaria y el control de la agenda de trabajo.
 
 ## **Sistema Propuesto**
 
-El proyecto consiste en el desarrollo de una página web para la gestión de turnos de barbería, diseñada para brindar una experiencia simple, clara y rápida.
+El proyecto consiste en el desarrollo de una p├ígina web para la gesti├│n de turnos de barber├¡a, dise├▒ada para brindar una experiencia simple, clara y r├ípida.
 
-A través del sitio, el cliente podrá:
+A trav├®s del sitio, el cliente podr├í:
 
 1. Visualizar la disponibilidad de turnos de cada barbero en tiempo real.
 
-2. Seleccionar el día, la hora y el profesional deseado.
+2. Seleccionar el d├¡a, la hora y el profesional deseado.
 
 3. Completar sus datos personales para registrar la reserva.
 
-4. Recibir una notificación automática de confirmación del turno.
+4. Recibir una notificaci├│n autom├ítica de confirmaci├│n del turno.
 
-El sistema permitirá validar automáticamente la disponibilidad de horarios y bloquear los turnos ya reservados para evitar superposiciones.
-Además, organizará la información de las reservas en una base de datos y permitirá al personal visualizar y administrar la agenda diaria de la barbería.
+El sistema permitir├í validar autom├íticamente la disponibilidad de horarios y bloquear los turnos ya reservados para evitar superposiciones.
+Adem├ís, organizar├í la informaci├│n de las reservas en una base de datos y permitir├í al personal visualizar y administrar la agenda diaria de la barber├¡a.
 
-De esta forma, se optimiza el tiempo del personal, se mejora la atención al cliente y se genera una experiencia más profesional y eficiente.
+De esta forma, se optimiza el tiempo del personal, se mejora la atenci├│n al cliente y se genera una experiencia m├ís profesional y eficiente.
 
 ## 
 
 ## **Objetivo General**
 
-Desarrollar una herramienta web que permita digitalizar y simplificar la gestión de turnos en barberías, mejorando la comunicación entre el cliente y el establecimiento.
+Desarrollar una herramienta web que permita digitalizar y simplificar la gesti├│n de turnos en barber├¡as, mejorando la comunicaci├│n entre el cliente y el establecimiento.
 
-**Objetivos Específicos**
+**Objetivos Espec├¡ficos**
 
-* Diseñar una interfaz intuitiva y accesible para cualquier usuario.
+* Dise├▒ar una interfaz intuitiva y accesible para cualquier usuario.
 
-* Implementar un sistema de reservas con validación de disponibilidad en tiempo real.
+* Implementar un sistema de reservas con validaci├│n de disponibilidad en tiempo real.
 
-* Evitar la superposición de turnos mediante el bloqueo automático de horarios ocupados.
+* Evitar la superposici├│n de turnos mediante el bloqueo autom├ítico de horarios ocupados.
 
-* Facilitar la elección del barbero según disponibilidad.
+* Facilitar la elecci├│n del barbero seg├║n disponibilidad.
 
-* Generar notificaciones automáticas de confirmación de turno.
+* Generar notificaciones autom├íticas de confirmaci├│n de turno.
 
 * Permitir al personal visualizar y administrar la agenda diaria.
 
-* Reducir la carga administrativa y los errores de organización.
+* Reducir la carga administrativa y los errores de organizaci├│n.
