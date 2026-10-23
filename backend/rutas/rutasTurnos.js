@@ -37,14 +37,12 @@ const normalizarHora = (valor) => {
 };
 
 const SLOTS_POR_DIA = 30;
-
 const SLOTS_FALLBACK = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '15:00', '15:30', '16:00', '16:30', '17:00'];
 
 const aMinutos = (hora) => {
   const p = String(hora ?? '').slice(0, 5).split(':').map(Number);
   return (Number(p[0]) || 0) * 60 + (Number(p[1]) || 0);
 };
-
 const desdeMinutos = (min) => `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
 
 const slotsAtendiblesDelDia = async (db, idProfesional, diaSemana) => {
@@ -106,7 +104,6 @@ const avisarReservaPorMail = async (db, { idCliente, idProfesional, idServicio, 
 
 router.get("/turnos/disponibles", jwtMiddleware, async (req, res) => {
   const { fecha, idProfesional } = req.query;
-
   const errFecha = errorFecha(fecha);
   if (errFecha) return res.status(400).json({ error: errFecha });
   const errId = errorId(idProfesional);
@@ -126,16 +123,13 @@ router.get("/turnos/disponibles", jwtMiddleware, async (req, res) => {
 
 router.get("/turnos/ocupados", jwtMiddleware, async (req, res) => {
   const { inicio, fin } = req.query;
-
   const errInicio = errorFecha(inicio);
   if (errInicio) return res.status(400).json({ error: `Parámetro "inicio": ${errInicio}` });
   const errFin = errorFecha(fin);
   if (errFin) return res.status(400).json({ error: `Parámetro "fin": ${errFin}` });
-
   if (inicio > fin) {
     return res.status(400).json({ error: 'El rango de fechas está invertido: "inicio" tiene que ser anterior a "fin".' });
   }
-
   const dias = (new Date(`${fin}T00:00:00`) - new Date(`${inicio}T00:00:00`)) / 86400000;
   if (dias > 93) {
     return res.status(400).json({ error: "El rango es demasiado grande (máximo 3 meses)." });
@@ -191,10 +185,11 @@ router.post("/turnos", jwtMiddleware, async (req, res) => {
     return res.status(403).json({ error: "No podés reservar un turno a nombre de otro cliente." });
   }
 
-  const fechaObj = new Date(`${fecha}T00:00:00`);
-  if (Number.isNaN(fechaObj.getTime())) {
-    return res.status(400).json({ error: "La fecha indicada no es válida." });
+  const errFecha = errorFecha(fecha);
+  if (errFecha) {
+    return res.status(400).json({ error: errFecha });
   }
+  const fechaObj = new Date(`${fecha}T00:00:00`);
   const diaNum = fechaObj.getDay();
   const hoyInicio = new Date(); hoyInicio.setHours(0, 0, 0, 0);
   const hoyFin = new Date(hoyInicio); hoyFin.setDate(hoyFin.getDate() + 30); hoyFin.setHours(23, 59, 59, 999);
@@ -271,11 +266,15 @@ router.post("/turnos", jwtMiddleware, async (req, res) => {
         `);
 
       await transaction.commit();
-      res.status(201).json({ mensaje: "Turno reservado.", idTurno: result.recordset[0].idTurno });
 
-      avisarReservaPorMail(db, { idCliente, idProfesional, idServicio, fecha, hora })
-        .then(() => console.log("Mail de confirmación enviado."))
-        .catch((e) => console.error("No se pudo enviar el mail de confirmación:", e.message));
+      try {
+        await avisarReservaPorMail(db, { idCliente, idProfesional, idServicio, fecha, hora });
+        console.log("Mail de confirmación enviado.");
+      } catch (e) {
+        console.error("No se pudo enviar el mail de confirmación:", e.message);
+      }
+
+      res.status(201).json({ mensaje: "Turno reservado.", idTurno: result.recordset[0].idTurno });
     } catch (error) {
       try { await transaction.rollback(); } catch {}
       throw error;
@@ -289,17 +288,14 @@ router.post("/turnos", jwtMiddleware, async (req, res) => {
 router.patch("/turnos/:id/cancelar", jwtMiddleware, async (req, res) => {
   try {
     const db = await getPool();
-
     const turno = await db.request()
       .input("id", sql.Int, req.params.id)
       .query("SELECT idCliente, CONVERT(varchar(10), fecha, 23) AS fecha, CONVERT(varchar(5), horaInicio, 108) AS horaIso FROM Turno WHERE idTurno = @id");
     if (turno.recordset.length === 0) return res.status(404).json({ error: "Turno no encontrado." });
     const { idCliente, fecha, horaIso } = turno.recordset[0];
-
     if (req.user.role !== 'admin' && Number(req.user.idCliente) !== Number(idCliente)) {
       return res.status(403).json({ error: "No tenés permiso para cancelar este turno." });
     }
-
     if (req.user.role !== 'admin' && tieneMenosDe24h(fecha, horaIso)) {
       return res.status(400).json({ error: "No se puede cancelar con menos de 24 horas de antelación. Contactanos al local." });
     }
@@ -326,28 +322,33 @@ router.patch("/turnos/:id", jwtMiddleware, async (req, res) => {
     if (req.user.role !== 'admin' && Number(req.user.idCliente) !== Number(idCliente)) {
       return res.status(403).json({ error: "No tenés permiso para editar este turno." });
     }
-
     if (estado !== undefined && req.user.role !== 'admin') {
       return res.status(403).json({ error: "Solo el administrador puede cambiar el estado de un turno." });
     }
-
     if (estado !== undefined) {
       const estadosValidos = ['Confirmado', 'Completado', 'NoSePresento', 'Cancelado'];
       if (!estadosValidos.includes(estado)) {
         return res.status(400).json({ error: "El estado indicado no es válido." });
       }
     }
-
     if (req.user.role !== 'admin' && (fecha !== undefined || horaInicio !== undefined) && tieneMenosDe24h(turnoActual.fechaIso, turnoActual.horaIso)) {
       return res.status(400).json({ error: "No se puede reprogramar con menos de 24 horas de antelación. Contactanos al local." });
     }
 
+    if (horaInicio !== undefined && !normalizarHora(horaInicio)) {
+      return res.status(400).json({ error: "El horario no tiene un formato válido (se espera HH:MM)." });
+    }
+
     if (fecha !== undefined) {
+      const errFecha = errorFecha(fecha);
+      if (errFecha) {
+        return res.status(400).json({ error: errFecha });
+      }
       const fechaObj = new Date(`${fecha}T00:00:00`);
       const diaNum = fechaObj.getDay();
       const hoyInicio = new Date(); hoyInicio.setHours(0, 0, 0, 0);
       const hoyFin = new Date(hoyInicio); hoyFin.setDate(hoyFin.getDate() + 30); hoyFin.setHours(23, 59, 59, 999);
-      if (Number.isNaN(fechaObj.getTime()) || diaNum === 0 || diaNum === 1) {
+      if (diaNum === 0 || diaNum === 1) {
         return res.status(400).json({ error: "La fecha elegida es domingo o lunes: la barbería está cerrada." });
       }
       if (fechaObj < hoyInicio || fechaObj > hoyFin) {
@@ -356,13 +357,10 @@ router.patch("/turnos/:id", jwtMiddleware, async (req, res) => {
     }
 
     const profFinal = idProfesional != null ? idProfesional : turnoActual.idProfesional;
-
     const fechaFinal = fecha !== undefined ? fecha : turnoActual.fechaIso;
     const horaFinal = horaInicio !== undefined ? normalizarHora(horaInicio) : turnoActual.horaIso;
 
     if (req.user.role !== 'admin' && (fecha !== undefined || horaInicio !== undefined || idProfesional !== undefined)) {
-      if (!horaFinal) return res.status(400).json({ error: "El horario no tiene un formato válido (se espera HH:MM)." });
-
       if (horarioYaPaso(fechaFinal, horaFinal)) {
         return res.status(400).json({ error: "Ese horario ya pasó. Elegí uno más adelante." });
       }
@@ -379,7 +377,6 @@ router.patch("/turnos/:id", jwtMiddleware, async (req, res) => {
     const transaction = new sql.Transaction(db);
     await transaction.begin(sql.ISOLATION_LEVEL.SERIALIZABLE);
     try {
-
       const ocupado = await new sql.Request(transaction)
         .input("idProfesional", sql.Int, profFinal)
         .input("fecha", sql.Date, fechaFinal)
@@ -396,10 +393,8 @@ router.patch("/turnos/:id", jwtMiddleware, async (req, res) => {
       if (idProfesional !== undefined) { set.push("idProfesional = @idProfesional"); reqPatch.input("idProfesional", sql.Int, idProfesional); }
       if (idServicio !== undefined) { set.push("idServicio = @idServicio"); reqPatch.input("idServicio", sql.Int, idServicio); }
       if (fecha !== undefined) { set.push("fecha = @fecha"); reqPatch.input("fecha", sql.Date, fecha); }
-
       if (horaInicio !== undefined) { set.push("horaInicio = @horaInicio"); reqPatch.input("horaInicio", sql.VarChar, horaFinal); }
       if (estado !== undefined) {
-
         set.push("estado = @estado");
         reqPatch.input("estado", sql.VarChar, estado);
       }
@@ -409,7 +404,6 @@ router.patch("/turnos/:id", jwtMiddleware, async (req, res) => {
         const cs = [];
         const cReq = new sql.Request(transaction).input("idCliente", sql.Int, idCliente);
         if (nombreCliente !== undefined) {
-
           const partes = String(nombreCliente).trim().split(/\s+/);
           cs.push("nombre = @nombre", "apellido = @apellido");
           cReq.input("nombre", sql.VarChar, partes[0] ?? '');
@@ -422,7 +416,6 @@ router.patch("/turnos/:id", jwtMiddleware, async (req, res) => {
       await transaction.commit();
       res.json({ mensaje: "Turno actualizado." });
     } catch (error) {
-
       try { await transaction.rollback(); } catch {}
       throw error;
     }

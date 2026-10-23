@@ -1,34 +1,32 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import './App.css';
-
 import Admin from './components/admin/Admin';
 import Inicio from './components/cliente/Inicio';
 import IniciarSesion from './components/ingreso/IniciarSesion';
 import MisTurnos from './components/cliente/MisTurnos';
 import WhatsApp from './components/comunes/WhatsApp';
-
 import { horariosFijos } from './datos/semilla';
-
-import { actualizarProfesional, actualizarServicio, actualizarTurno, cancelarTurno, crearProfesional, crearServicio, eliminarProfesional, eliminarServicio, eliminarTurno, guardarBloqueos, guardarHorarios, loginCliente, obtenerBloqueos, obtenerHorarios, obtenerProfesionales, obtenerServicios, obtenerTurnos, obtenerTurnosCliente, obtenerTurnosDisponibles, obtenerTurnosOcupados, registrarCliente, reservarTurno, verificarToken } from './servicios/api';
-
+import { actualizarProfesional, actualizarServicio, actualizarTurno, cancelarTurno, crearProfesional, crearServicio, eliminarProfesional, eliminarServicio, eliminarTurno, guardarBloqueos, guardarHorarios, loginCliente, obtenerBloqueos, obtenerHorarios, obtenerProfesionales, obtenerServicios, obtenerTurnos, obtenerTurnosCliente, obtenerTurnosDisponibles, obtenerTurnosOcupados, registrarCliente, reservarTurno, restablecerPassword, solicitarRecuperacion, verificarToken } from './servicios/api';
 import { sePuedeCancelar, formatoFecha, bloqueosDeLaFecha, patronDelDia, horariosDeLaSemana, horariosPasados, esDiaCerrado, estadoDelTurno, datosDelDia, fechaAIso } from './utilidades/funciones';
 
 const today = new Date(), calendarStart = new Date(today), calendarEnd = new Date(today);
 calendarStart.setHours(0, 0, 0, 0); calendarEnd.setDate(calendarEnd.getDate() + 30); calendarEnd.setHours(23, 59, 59, 999);
-
 const initialCalendarDate = fechaAIso(calendarStart);
 
 function App() {
-
   const [vista, setVista] = useState('cliente');
   const [token, setToken] = useState(() => { try { return localStorage.getItem('token') ?? ''; } catch { return ''; } });
   const [currentUser, setCurrentUser] = useState(() => { try { return JSON.parse(localStorage.getItem('currentUser') ?? 'null'); } catch { return null; } });
   const sesionIniciada = Boolean(token && currentUser);
 
-  const [pantallaAcceso, setPantallaAcceso] = useState('ingreso');
+  const [pantallaAcceso, setPantallaAcceso] = useState(() => {
+    try { return new URLSearchParams(window.location.search).get('reset') ? 'restablecer' : 'ingreso'; } catch { return 'ingreso'; }
+  });
   const [correoIngreso, setCorreoIngreso] = useState(''); const [claveIngreso, setClaveIngreso] = useState('');
+  const [tokenRecuperacion, setTokenRecuperacion] = useState(() => { try { return new URLSearchParams(window.location.search).get('reset') ?? ''; } catch { return ''; } });
+  const [correoRecuperacion, setCorreoRecuperacion] = useState('');
+  const [claveNueva, setClaveNueva] = useState('');
   const [formularioRegistro, setFormularioRegistro] = useState({ nombre: '', apellido: '', email: '', telefono: '', password: '' });
-
   const [avisoAcceso, setAvisoAcceso] = useState({ type: 'idle', message: 'Primero iniciá sesión para acceder al turnero.' });
 
   const [profesionales, setProfesionales] = useState([]);
@@ -51,14 +49,11 @@ function App() {
   const [bloqueosPorFecha, setBloqueosPorFecha] = useState([]);
   const [horarioLaboral, setHorarioLaboral] = useState([]);
   const [rangoReservado, setBookedRange] = useState([]);
-
   const [errorCarga, setErrorCarga] = useState('');
-
-const [intentoRecarga, setIntentoRecarga] = useState(0);
+  const [intentoRecarga, setIntentoRecarga] = useState(0);
 
   useEffect(() => { if (profesionales.length > 0 && !profesionales.some((b) => b.id === profesionalSeleccionado)) setProfesionalSeleccionado(profesionales[0].id); }, [profesionales, profesionalSeleccionado]);
   useEffect(() => { if (servicios.length > 0 && !servicios.some((s) => s.id === servicioSeleccionado)) setServicioSeleccionado(servicios[0].id); }, [servicioSeleccionado, servicios]);
-
   useEffect(() => { setNombreCliente(currentUser?.name ?? ''); setTelefonoCliente(currentUser?.phone ?? ''); }, [currentUser]);
 
   const expulsarPorSesion = useCallback(() => {
@@ -103,7 +98,6 @@ const [intentoRecarga, setIntentoRecarga] = useState(0);
   useEffect(() => {
     if (!token) return;
     let cancelado = false;
-
     const valor = (resultado, etiqueta) => {
       if (resultado.status === 'rejected') { console.warn(`[carga inicial] Falló ${etiqueta}:`, resultado.reason); return null; }
       return resultado.value;
@@ -126,7 +120,7 @@ const [intentoRecarga, setIntentoRecarga] = useState(0);
         if (Array.isArray(o)) setBookedRange(o);
         setErrorCarga(fallidas.length ? `No se pudo cargar: ${fallidas.join(', ')}. Revisá que el backend esté corriendo.` : '');
       });
-return () => { cancelado = true; };
+      return () => { cancelado = true; };
     }, [token, intentoRecarga]);
 
   const refrescarOcupados = useCallback(() => {
@@ -169,7 +163,6 @@ return () => { cancelado = true; };
     } catch (error) { if (error?.status === 401) expulsarPorSesion(); }
   }, [currentUser, token, expulsarPorSesion, normalizarHoraApi]);
   useEffect(() => { if (sesionIniciada && currentUser?.role !== 'admin') cargarMisTurnos(); }, [sesionIniciada, cargarMisTurnos, currentUser?.role]);
-
   useEffect(() => {
     if (!sesionIniciada || currentUser?.role === 'admin') return;
     const onVisible = () => { if (document.visibilityState === 'visible') cargarMisTurnos(); };
@@ -215,19 +208,13 @@ return () => { cancelado = true; };
   const patronDiaSeleccionado = patronDelDia(diaSeleccionado);
   const fechaFormateada = formatoFecha(diaSeleccionado);
   const diaActual = { id: patronDiaSeleccionado ?? 'dom', label: fechaFormateada.label, date: fechaFormateada.date };
-
   const horariosDelDia = patronDiaSeleccionado ? horariosDeLaSemana(horarioLaboral, profesionalSeleccionado, patronDiaSeleccionado, horariosFijos) : [];
-
   const horariosBloqueadosLocales = patronDiaSeleccionado ? [...(turnosOcupados[profesionalSeleccionado]?.[fechaSeleccionada] ?? []), ...bloqueosDeLaFecha(bloqueosPorFecha, profesionalSeleccionado, fechaSeleccionada, horariosDelDia)] : horariosDelDia;
-
   const horariosPasadosHoy = horariosPasados(fechaSeleccionada, horariosDelDia);
   const horariosNoDisponibles = [...new Set([...horariosBloqueadosLocales, ...horariosOcupadosApi, ...horariosPasadosHoy])];
-
   const horariosLibres = horariosDelDia.filter((s) => !horariosNoDisponibles.includes(s));
-
   useEffect(() => { if (horariosLibres.length === 0) { setHoraSeleccionada(''); return; } if (!horariosLibres.includes(horaSeleccionada)) setHoraSeleccionada(horariosLibres[0]); }, [horariosLibres, horaSeleccionada]);
   const horaEstaOcupada = horaSeleccionada ? horariosNoDisponibles.includes(horaSeleccionada) : true;
-
   const esDomingoOLunes = esDiaCerrado(diaSeleccionado.getDay());
   const fueraDeRango = diaSeleccionado < calendarStart || diaSeleccionado > calendarEnd;
 
@@ -255,7 +242,7 @@ return () => { cancelado = true; };
       setAvisoAcceso({ type: 'idle', message: 'Iniciando sesión...' });
       const r = await loginCliente(cred, pass);
       if (r?.role === 'admin') {
-        const admin = { idCliente: null, idAdmin: r.admin?.idAdmin ?? null, name: r.admin?.nombre ?? 'Administrador', email: r.admin?.email ?? cred, role: 'admin' };
+        const admin = { idCliente: null, idAdmin: r.admin?.idAdmin ?? null, name: r.admin?.nombre ?? 'Administrador', email: r.admin?.email ?? cred, role: 'admin', usuario:r.admin?.usuario ?? '' };
         setToken(r.token); setCurrentUser(admin);
         try { localStorage.setItem('token', r.token); localStorage.setItem('currentUser', JSON.stringify(admin)); } catch {}
         setVista('admin'); setAvisoAcceso({ type: 'success', message: 'Acceso de administrador habilitado.' });
@@ -279,7 +266,6 @@ return () => { cancelado = true; };
   const crearCuenta = async (event) => {
     event.preventDefault(); const { nombre, apellido, email, telefono, password } = formularioRegistro;
     if (!nombre.trim() || !apellido.trim() || !email.trim() || !password.trim() || !telefono.trim()) { setAvisoAcceso({ type: 'error', message: 'Completá nombre, apellido, mail, contraseña y whatsapp para registrarte.' }); return; }
-
     if (password.length < 8) { setAvisoAcceso({ type: 'error', message: 'La contraseña tiene que tener al menos 8 caracteres.' }); return; }
     try {
       setAvisoAcceso({ type: 'idle', message: 'Creando tu cuenta...' });
@@ -287,6 +273,31 @@ return () => { cancelado = true; };
       setPantallaAcceso('ingreso'); setCorreoIngreso(email.trim()); setClaveIngreso('');
       setAvisoAcceso({ type: 'success', message: `¡Cuenta creada! Ya podés iniciar sesión con ${email.trim()}.` });
     } catch (error) { setAvisoAcceso({ type: 'error', message: error.message || 'Error al registrar el cliente.' }); }
+  };
+
+  const pedirRecuperacion = async (event) => {
+    event.preventDefault();
+    const mail = correoRecuperacion.trim();
+    if (!mail) { setAvisoAcceso({ type: 'error', message: 'Escribí el mail de tu cuenta.' }); return; }
+    try {
+      setAvisoAcceso({ type: 'idle', message: 'Enviando el link de recuperación...' });
+      const r = await solicitarRecuperacion(mail);
+      setAvisoAcceso({ type: 'success', message: r?.mensaje || 'Si el mail está registrado, te enviamos un link.' });
+    } catch (error) { setAvisoAcceso({ type: 'error', message: error.message || 'No pudimos enviar el link.' }); }
+  };
+
+  const cambiarClave = async (event) => {
+    event.preventDefault();
+    if (!tokenRecuperacion) { setAvisoAcceso({ type: 'error', message: 'El link no es válido. Pedí uno nuevo.' }); return; }
+    if (claveNueva.length < 8) { setAvisoAcceso({ type: 'error', message: 'La contraseña tiene que tener al menos 8 caracteres.' }); return; }
+    try {
+      setAvisoAcceso({ type: 'idle', message: 'Guardando la nueva contraseña...' });
+      await restablecerPassword(tokenRecuperacion, claveNueva);
+      try { history.replaceState(null, '', window.location.pathname); } catch {}
+      setTokenRecuperacion(''); setClaveNueva(''); setCorreoRecuperacion('');
+      setPantallaAcceso('ingreso');
+      setAvisoAcceso({ type: 'success', message: 'Contraseña actualizada. Iniciá sesión con tu nueva clave.' });
+    } catch (error) { setAvisoAcceso({ type: 'error', message: error.message || 'No pudimos cambiar la contraseña.' }); }
   };
 
   const registrarTurno = async (event) => {
@@ -303,7 +314,6 @@ return () => { cancelado = true; };
       await reservarTurno({ idCliente: currentUser.idCliente, idProfesional: profesionalSeleccionado, idServicio: servicioSeleccionado, fecha: fechaSeleccionada, horaInicio: horaSeleccionada, telefono: telefonoCliente.trim() }, token);
       setAviso({ type: 'success', message: `Turno confirmado para ${nombreCliente.trim()} con ${profesionalActual.name} (${servicioActual.name}, $${servicioActual.price.toLocaleString('es-AR')}) el ${fechaFormateada.label} ${fechaFormateada.date} a las ${horaSeleccionada}.` });
       setNombreCliente(currentUser?.name ?? ''); setTelefonoCliente(currentUser?.phone ?? ''); setHoraSeleccionada('');
-
       cargarDisponibilidad(); refrescarOcupados(); if (currentUser?.role === 'admin') await cargarTurnosAdmin(); else await cargarMisTurnos();
     } catch (error) { setAviso({ type: 'error', message: error.message || 'Error al reservar el turno.' }); }
     finally { setSubmitting(false); }
@@ -311,12 +321,10 @@ return () => { cancelado = true; };
 
   const cantidadOcupados = horariosDelDia.length - horariosLibres.length;
   const emailUsuario = currentUser?.email ?? '';
-
   const turnosDelUsuario = useMemo(
     () => turnosConfirmados.filter((b) => b.emailCliente === emailUsuario).slice().sort((l, r) => `${l.fecha}T${l.hora}`.localeCompare(`${r.fecha}T${r.hora}`)),
     [turnosConfirmados, emailUsuario]
   );
-
   const turnosPendientes = turnosDelUsuario.filter((b) => b.estado === 'Confirmado');
   const turnosExpirados = turnosDelUsuario.filter((b) => b.estado === 'Expirado'); const proximosTurnos = turnosPendientes.slice(0, 3);
 
@@ -345,7 +353,6 @@ return () => { cancelado = true; };
     const partes = String(nombreCompleto).trim().split(/\s+/);
     return { nombre: partes[0] ?? '', apellido: partes.slice(1).join(' ') };
   };
-
   const registrarProfesional = async (nombreCompleto, email, telefono) => {
     const { nombre, apellido } = dividirNombre(nombreCompleto);
     try {
@@ -355,7 +362,6 @@ return () => { cancelado = true; };
       return { ok: true };
     } catch (error) { if (error.status === 401) expulsarPorSesion(); return { ok: false, error: error.message || 'Error al agregar el profesional.' }; }
   };
-
   const editarProfesional = async (id, nombreCompleto, email, telefono) => {
     const { nombre, apellido } = dividirNombre(nombreCompleto);
     try {
@@ -365,7 +371,6 @@ return () => { cancelado = true; };
       return { ok: true };
     } catch (error) { if (error.status === 401) expulsarPorSesion(); return { ok: false, error: error.message || 'Error al actualizar el profesional.' }; }
   };
-
   const borrarProfesional = async (id) => {
     if (!window.confirm('¿Eliminar a este profesional? Sus turnos se mantienen, pero ya no recibirá reservas nuevas.')) return { ok: false };
     try {
@@ -375,7 +380,6 @@ return () => { cancelado = true; };
       return { ok: true };
     } catch (error) { if (error.status === 401) expulsarPorSesion(); return { ok: false, error: error.message || 'Error al eliminar el profesional.' }; }
   };
-
   const cambiarActivoProfesional = async (id, activo) => {
     try {
       await actualizarProfesional(id, { activo: !activo }, token);
@@ -399,7 +403,6 @@ return () => { cancelado = true; };
       return true;
     } catch (error) { if (error.status === 401) expulsarPorSesion(); else setAviso({ type: 'error', message: error.message || 'Error al actualizar el servicio.' }); return false; }
   };
-
   const borrarServicio = async (id) => {
     if (!window.confirm('¿Eliminar este servicio del catálogo?')) return false;
     try {
@@ -420,7 +423,6 @@ return () => { cancelado = true; };
       return false;
     }
   }, [token, expulsarPorSesion]);
-
   const guardarHorariosSemanales = useCallback(async (idProfesional, horarios) => {
     try {
       await guardarHorarios(idProfesional, horarios, token);
@@ -432,7 +434,6 @@ return () => { cancelado = true; };
       return false;
     }
   }, [token, expulsarPorSesion]);
-
   const editarTurno = async (bookingId, updates) => {
     try {
       setAviso({ type: 'idle', message: 'Guardando el turno...' });
@@ -441,7 +442,6 @@ return () => { cancelado = true; };
         idServicio: updates.idServicio ? Number(updates.idServicio) : undefined,
         fecha: updates.fecha || undefined,
         horaInicio: updates.hora || undefined,
-
         estado: ['Confirmado', 'Completado', 'NoSePresento', 'Cancelado'].includes(updates.estado) ? updates.estado : undefined,
         nombreCliente: updates.nombreCliente !== undefined ? updates.nombreCliente : undefined,
         telefono: updates.telefonoCliente,
@@ -456,7 +456,6 @@ return () => { cancelado = true; };
       return false;
     }
   };
-
   const borrarTurno = async (bookingId) => {
     if (!window.confirm('¿Eliminar este turno definitivamente?')) return;
     try {
@@ -470,7 +469,6 @@ return () => { cancelado = true; };
       else setAviso({ type: 'error', message: error.message || 'Error al eliminar el turno.' });
     }
   };
-
   const verMisTurnos = () => { setVista('mis-turnos'); try { history.pushState({ view: 'mis-turnos' }, '', '#mis-turnos'); } catch {} };
   const volverAlCliente = () => { setVista('cliente'); try { history.pushState({ view: 'cliente' }, '', window.location.pathname); } catch {} };
 
@@ -483,13 +481,12 @@ return () => { cancelado = true; };
     return () => window.removeEventListener('popstate', onPop);
   }, []);
 
-  if (!sesionIniciada) return (
+  if (!sesionIniciada || tokenRecuperacion) return (
     <>
-      <IniciarSesion pantallaAcceso={pantallaAcceso} avisoAcceso={avisoAcceso} ingresarConGoogle={ingresarConGoogle} iniciarSesion={iniciarSesion} crearCuenta={crearCuenta} correoIngreso={correoIngreso} claveIngreso={claveIngreso} onMostrarIngreso={() => setPantallaAcceso('ingreso')} onMostrarRegistro={() => setPantallaAcceso('registro')} formularioRegistro={formularioRegistro} setCorreoIngreso={setCorreoIngreso} setClaveIngreso={setClaveIngreso} setFormularioRegistro={setFormularioRegistro} />
+      <IniciarSesion pantallaAcceso={pantallaAcceso} avisoAcceso={avisoAcceso} ingresarConGoogle={ingresarConGoogle} iniciarSesion={iniciarSesion} crearCuenta={crearCuenta} pedirRecuperacion={pedirRecuperacion} cambiarClave={cambiarClave} correoIngreso={correoIngreso} claveIngreso={claveIngreso} correoRecuperacion={correoRecuperacion} claveNueva={claveNueva} onMostrarIngreso={() => setPantallaAcceso('ingreso')} onMostrarRegistro={() => setPantallaAcceso('registro')} onMostrarRecuperar={() => setPantallaAcceso('recuperar')} formularioRegistro={formularioRegistro} setCorreoIngreso={setCorreoIngreso} setClaveIngreso={setClaveIngreso} setCorreoRecuperacion={setCorreoRecuperacion} setClaveNueva={setClaveNueva} setFormularioRegistro={setFormularioRegistro} />
       <WhatsApp />
     </>
   );
-
   if (currentUser?.role !== 'admin' && (profesionales.length === 0 || servicios.length === 0)) return (
     <main className="simple-page" style={{ display: 'grid', placeItems: 'center', alignContent: 'center', gap: '1.5rem', minHeight: '100svh', textAlign: 'center' }}>
       <div style={{ display: 'grid', gap: '0.65rem', maxWidth: '34rem' }}>

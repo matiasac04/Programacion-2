@@ -1,10 +1,25 @@
 import { useState } from 'react';
 import PieDePagina from '../comunes/PieDePagina';
 import logoTijera from '../../assets/logo-tijera.svg';
-function IniciarSesion({ pantallaAcceso, avisoAcceso, iniciarSesion, crearCuenta, ingresarConGoogle, correoIngreso, claveIngreso, onMostrarIngreso, onMostrarRegistro, formularioRegistro, setCorreoIngreso, setClaveIngreso, setFormularioRegistro }) {
+function IniciarSesion({ pantallaAcceso, avisoAcceso, iniciarSesion, crearCuenta, ingresarConGoogle, pedirRecuperacion, cambiarClave, correoIngreso, claveIngreso, correoRecuperacion, claveNueva, onMostrarIngreso, onMostrarRegistro, onMostrarRecuperar, formularioRegistro, setCorreoIngreso, setClaveIngreso, setCorreoRecuperacion, setClaveNueva, setFormularioRegistro }) {
   const esRegistro = pantallaAcceso === 'registro';
+  const esRecuperar = pantallaAcceso === 'recuperar';
+  const esRestablecer = pantallaAcceso === 'restablecer';
+  const titulo = esRegistro ? 'Creá tu cuenta' : esRecuperar ? 'Recuperá tu clave' : esRestablecer ? 'Elegí una nueva clave' : 'Iniciá sesión';
+  const bajada = esRegistro
+    ? 'Completá tus datos para registrarte y después entrar al sistema de turnos.'
+    : esRecuperar
+      ? 'Te mandamos un link por mail para que puedas elegir una nueva contraseña.'
+      : esRestablecer
+        ? 'El link es válido por 1 hora y una sola vez. Elegí una clave nueva para tu cuenta.'
+        : 'Accedé con tu mail y contraseña para entrar al sistema de turnos.';
   const [verClave, setVerClave] = useState(false);
 
+  const aviso = (
+    <div className={`simple-feedback ${avisoAcceso.type}`} role="alert" aria-live="assertive">
+      {avisoAcceso.message}
+    </div>
+  );
   return (
     <main className="simple-page auth-page">
       <section className="simple-hero auth-shell">
@@ -16,8 +31,8 @@ function IniciarSesion({ pantallaAcceso, avisoAcceso, iniciarSesion, crearCuenta
             <span className="brand-text"><strong>Barberia</strong><small>Qué cortecito</small></span>
           </a>
           <span className="simple-tag">Agendá online</span>
-          <h1>{esRegistro ? 'Creá tu cuenta' : 'Iniciá sesión'}</h1>
-          <p>{esRegistro ? 'Completá tus datos para registrarte y después entrar al sistema de turnos.' : 'Accedé con tu mail y contraseña para entrar al sistema de turnos.'}</p>
+          <h1>{titulo}</h1>
+          <p>{bajada}</p>
           <ul className="auth-features">
             <li>Reservá tu turno online en menos de un minuto</li>
             <li>Elegí tu profesional y el servicio que quieras</li>
@@ -27,6 +42,7 @@ function IniciarSesion({ pantallaAcceso, avisoAcceso, iniciarSesion, crearCuenta
         {esRegistro ? (
           <form className="auth-card" onSubmit={crearCuenta}>
             <div className="auth-card-head"><div><h2>Crear cuenta</h2></div><p>Te pedimos los datos justos para dejar tu perfil listo.</p></div>
+            {aviso}
             <div className="auth-fields register-fields">
               <input type="text" placeholder="Nombre" value={formularioRegistro.nombre} onChange={(e) => setFormularioRegistro((p) => ({ ...p, nombre: e.target.value }))} />
               <input type="text" placeholder="Apellido" value={formularioRegistro.apellido} onChange={(e) => setFormularioRegistro((p) => ({ ...p, apellido: e.target.value }))} />
@@ -36,19 +52,44 @@ function IniciarSesion({ pantallaAcceso, avisoAcceso, iniciarSesion, crearCuenta
             </div>
             <button className="auth-submit primary" type="submit">Crear cuenta</button>
             <button className="auth-submit secondary" type="button" onClick={onMostrarIngreso}>Volver atrás</button>
-            <div className={`simple-feedback ${avisoAcceso.type}`}>{avisoAcceso.message}</div>
+          </form>
+        ) : esRecuperar ? (
+          <form className="auth-card" onSubmit={pedirRecuperacion}>
+            <div className="auth-card-head"><div><h2>¿Olvidaste tu contraseña?</h2></div><p>Escribí el mail de tu cuenta y te enviamos un link para elegir una nueva.</p></div>
+            {aviso}
+            <div className="auth-fields">
+              <input type="email" placeholder="Mail" value={correoRecuperacion} onChange={(e) => setCorreoRecuperacion(e.target.value)} />
+            </div>
+            <button className="auth-submit primary" type="submit">Enviar link</button>
+            <button className="auth-submit secondary" type="button" onClick={onMostrarIngreso}>Volver al login</button>
+          </form>
+        ) : esRestablecer ? (
+          <form className="auth-card" onSubmit={cambiarClave}>
+            <div className="auth-card-head"><div><h2>Nueva contraseña</h2></div><p>Elegí una clave de al menos 8 caracteres para tu cuenta.</p></div>
+            {aviso}
+            <div className="auth-fields">
+              <input type={verClave ? 'text' : 'password'} placeholder="Nueva contraseña (mínimo 8 caracteres)" minLength={8} maxLength={72} value={claveNueva} onChange={(e) => setClaveNueva(e.target.value)} />
+            </div>
+            <label className="auth-toggle">
+              <input type="checkbox" checked={verClave} onChange={(e) => setVerClave(e.target.checked)} />
+              Mostrar contraseña
+            </label>
+            <button className="auth-submit primary" type="submit">Guardar contraseña</button>
+            <button className="auth-submit secondary" type="button" onClick={onMostrarIngreso}>Volver al login</button>
           </form>
         ) : (
           <form className="auth-card" onSubmit={iniciarSesion}>
             <div className="auth-card-head"><div><h2>Entrá a tu cuenta</h2></div><p>Reservá y administrá tus turnos desde una sola pantalla.</p></div>
+            {aviso}
             <div className="auth-fields">
-              <input type="text" placeholder="Usuario o mail" value={correoIngreso} onChange={(e) => setCorreoIngreso(e.target.value)} />
+              <input type="text" placeholder="Mail" value={correoIngreso} onChange={(e) => setCorreoIngreso(e.target.value)} />
               <input type={verClave ? 'text' : 'password'} placeholder="Contraseña" value={claveIngreso} onChange={(e) => setClaveIngreso(e.target.value)} />
             </div>
             <label className="auth-toggle">
               <input type="checkbox" checked={verClave} onChange={(e) => setVerClave(e.target.checked)} />
               Mostrar contraseña
             </label>
+            <button className="auth-link" type="button" onClick={onMostrarRecuperar}>¿Olvidaste tu contraseña?</button>
             <button className="auth-submit primary" type="submit">Iniciar sesión</button>
             <button className="auth-submit secondary" type="button" onClick={onMostrarRegistro}>Registrarme</button>
             <span className="auth-divider">o</span>
@@ -61,7 +102,6 @@ function IniciarSesion({ pantallaAcceso, avisoAcceso, iniciarSesion, crearCuenta
               </svg>
               Continuar con Google
             </button>
-            <div className={`simple-feedback ${avisoAcceso.type}`}>{avisoAcceso.message}</div>
           </form>
         )}
       </section>

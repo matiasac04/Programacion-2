@@ -3,17 +3,13 @@ import Calendario from './Calendario';
 import PieDePagina from '../comunes/PieDePagina';
 import Cabecera from '../comunes/Cabecera';
 import { horariosLibresDelDia, patronDelDia } from '../../utilidades/funciones';
-
 const iniciales = (name) => name.split(' ').filter(Boolean).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
-
 const esDiaCerrado = (ds) => !patronDelDia(new Date(`${ds}T00:00:00`));
-
 const leerPasoDesdeHash = () => {
   const m = window.location.hash.match(/^#paso-(\d)$/);
   const n = m ? Number(m[1]) : 1;
   return n >= 1 && n <= 5 ? n : 1;
 };
-
 function BarraPasos({ onPrev, onNext }) {
   return (
     <div className="step-nav">
@@ -23,10 +19,8 @@ function BarraPasos({ onPrev, onNext }) {
   );
 }
 function Inicio({ horariosLibres, profesionales, profesionalActual, servicioActual, diaActual, currentUser, nombreCliente, telefonoCliente, bloqueosPorFecha, diaCalendarMax, diaCalendarMin, horariosDelDia, aviso, registrarTurno, cargandoDisponibilidad, proximosTurnos, cantidadOcupados, onCerrarSesion, onVerMisTurnos, horarioLaboral, profesionalSeleccionado, fechaSeleccionada, servicioSeleccionado, horaSeleccionada, horaEstaOcupada, servicios, setNombreCliente, setTelefonoCliente, setProfesionalSeleccionado, setFechaSeleccionada, setServicioSeleccionado, setHoraSeleccionada, enviando, horariosFijos, turnosOcupados, horariosNoDisponibles }) {
-
   const [pasoActual, setPasoActual] = useState(leerPasoDesdeHash);
   const [infoVisible, setInfoVisible] = useState(false);
-
   useEffect(() => {
     const inicial = leerPasoDesdeHash();
     try { history.replaceState({ paso: inicial }, '', `#paso-${inicial}`); } catch {}
@@ -39,11 +33,9 @@ function Inicio({ horariosLibres, profesionales, profesionalActual, servicioActu
     setPasoActual(n);
     try { history.pushState({ paso: n }, '', `#paso-${n}`); } catch {}
   };
-
   if (!profesionalActual || !servicioActual) return null;
   const diaCerrado = diaActual.id === 'dom';
   const cantidadLibres = (bid) => (diaCerrado ? 0 : horariosLibresDelDia(turnosOcupados, bid, fechaSeleccionada, horariosFijos, bloqueosPorFecha, horarioLaboral).length);
-
   return (
     <main className="simple-page">
       <Cabecera />
@@ -90,7 +82,6 @@ function Inicio({ horariosLibres, profesionales, profesionalActual, servicioActu
             <span className="step-progress-label">Paso {pasoActual} de 5</span>
             <span className="step-progress-bar"><i style={{ width: `${(pasoActual / 5) * 100}%` }} /></span>
           </div>
-          {aviso.type !== 'success' && <div className={`simple-feedback ${aviso.type}`}>{aviso.message}</div>}
           <div className={`simple-group step-panel${pasoActual === 1 ? ' is-active' : ''}`} data-step="1">
             <div className="step-label"><span className="step-badge">1</span><label>Elegí el servicio</label></div>
             <div className="chip-grid service-grid">
@@ -146,10 +137,10 @@ function Inicio({ horariosLibres, profesionales, profesionalActual, servicioActu
               <input type="text" placeholder="Nombre y apellido" value={nombreCliente} onChange={(e) => setNombreCliente(e.target.value)} />
               <input type="tel" placeholder="Celular (ej. 11 5555-1234)" value={telefonoCliente} onChange={(e) => setTelefonoCliente(e.target.value)} />
               <button className="simple-submit" type="submit" disabled={enviando}>{enviando ? 'Confirmando...' : 'Confirmar turno'}</button>
-              {aviso.type === 'success' && <div className={`simple-feedback ${aviso.type}`}>{aviso.message}</div>}
             </form>
             <BarraPasos onPrev={() => irAlPaso(4)} />
           </div>
+          <div className={`simple-feedback ${aviso.type}`}>{aviso.message}</div>
         </article>
         <article className="simple-card">
           <div className="simple-section-head">
@@ -173,7 +164,7 @@ function Inicio({ horariosLibres, profesionales, profesionalActual, servicioActu
           </div>
           <div className="stats-row">
             <div><strong>{proximosTurnos.length}</strong><span>Próximos</span></div>
-            <div><strong>{cantidadOcupados}</strong><span>Horas ocupadas hoy</span></div>
+            <div><strong>{cantidadOcupados}</strong><span>Horas ocupadas del día</span></div>
           </div>
         </article>
       </section>

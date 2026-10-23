@@ -25,7 +25,6 @@ const limiter = rateLimit({
   max: 300,
   standardHeaders: true,
   legacyHeaders: false,
-
   message: { error: "Demasiadas consultas. Esperá un rato y volvé a intentar." },
 });
 app.use(limiter);
@@ -35,10 +34,9 @@ const authLimiter = rateLimit({
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
-
   message: { error: "Demasiados intentos de acceso. Esperá 15 minutos y volvé a intentar." },
 });
-app.use(["/login", "/registro"], authLimiter);
+app.use(["/login", "/registro", "/recuperar", "/restablecer"], authLimiter);
 
 app.use(rutasSesion);
 app.use(rutasClientes);

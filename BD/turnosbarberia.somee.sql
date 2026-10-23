@@ -13,7 +13,9 @@ CREATE TABLE Cliente (
     apellido VARCHAR(100),
     email VARCHAR(150) UNIQUE,
     telefono VARCHAR(20),
-    password VARCHAR(255)
+    password VARCHAR(255),
+    tokenRecuperacion VARCHAR(64) NULL,
+    tokenExpira DATETIME NULL
 );
 
 CREATE TABLE Administrador (

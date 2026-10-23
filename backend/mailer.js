@@ -58,4 +58,19 @@ function htmlConfirmacionTurno({ cliente, servicio, profesional, fecha, hora, pr
   </div>`;
 }
 
-module.exports = { enviarMail, htmlConfirmacionTurno, formatearFecha };
+function htmlRecuperacionPassword({ nombre, enlace }) {
+  return `
+  <div style="font-family: Arial, Helvetica, sans-serif; background:#f4f4f4; padding:24px;">
+    <div style="max-width:520px; margin:auto; background:#ffffff; border-radius:8px; padding:32px; color:#222222;">
+      <h1 style="margin:0 0 4px; font-size:22px;">Restablecé tu contraseña</h1>
+      <p style="margin:0 0 20px; color:#555555;">Hola ${nombre}, recibimos un pedido para cambiar la contraseña de tu cuenta en Barberia.</p>
+      <p style="margin:0 0 24px;">
+        <a href="${enlace}" style="display:inline-block; background:#222222; color:#ffffff; text-decoration:none; padding:12px 24px; border-radius:6px; font-weight:bold;">Elegir nueva contraseña</a>
+      </p>
+      <p style="margin:0 0 8px; font-size:13px; color:#888888;">El link vence en 1 hora y sirve una sola vez.</p>
+      <p style="margin:0; font-size:13px; color:#888888;">Si no pediste este cambio, ignorá este mail: tu contraseña actual sigue funcionando.</p>
+    </div>
+  </div>`;
+}
+
+module.exports = { enviarMail, htmlConfirmacionTurno, htmlRecuperacionPassword, formatearFecha };
