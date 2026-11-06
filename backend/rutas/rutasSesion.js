@@ -5,7 +5,7 @@ const crypto = require("crypto");
 
 const { sql, getPool } = require("../conexion");
 const { jwtMiddleware, JWT_SECRET } = require("../autenticacion");
-const { errorPassword } = require("../validaciones");
+const { errorPassword, errorTelefono } = require("../validaciones");
 const { enviarMail, htmlRecuperacionPassword } = require("../mailer");
 
 const verificarPassword = async (passwordPlano, hash) => {
@@ -38,9 +38,9 @@ router.post("/registro", async (req, res) => {
     if (String(nombre).length > 100 || String(apellido).length > 100) {
       return res.status(400).json({ error: "Nombre y apellido no pueden superar los 100 caracteres." });
     }
-    if (telefono != null && String(telefono).length > 20) {
-      return res.status(400).json({ error: "El teléfono no puede superar los 20 caracteres." });
-    }
+    const errTelefono = errorTelefono(telefono);
+    if (errTelefono) return res.status(400).json({ error: errTelefono });
+    const telefonoFinal = telefono == null ? null : String(telefono).trim() || null;
 
     const existe = await db.request()
       .input("email", sql.VarChar, emailFinal)
@@ -54,7 +54,7 @@ router.post("/registro", async (req, res) => {
       .input("nombre", sql.VarChar, nombre)
       .input("apellido", sql.VarChar, apellido)
       .input("email", sql.VarChar, emailFinal)
-      .input("telefono", sql.VarChar, telefono || null)
+      .input("telefono", sql.VarChar, telefonoFinal)
       .input("password", sql.VarChar, passwordHash)
       .query(`
         INSERT INTO Cliente (nombre, apellido, email, telefono, password)

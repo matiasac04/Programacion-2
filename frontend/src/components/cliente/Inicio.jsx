@@ -135,7 +135,15 @@ function Inicio({ horariosLibres, profesionales, profesionalActual, servicioActu
             <div className="step-label"><span className="step-badge">5</span><label>Completá tus datos y confirmá</label></div>
             <form className="simple-form" onSubmit={registrarTurno}>
               <input type="text" placeholder="Nombre y apellido" value={nombreCliente} onChange={(e) => setNombreCliente(e.target.value)} />
-              <input type="tel" placeholder="Celular (ej. 11 5555-1234)" value={telefonoCliente} onChange={(e) => setTelefonoCliente(e.target.value)} />
+              <input
+                type="tel"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={20}
+                placeholder="Celular (solo números)"
+                value={telefonoCliente}
+                onChange={(e) => setTelefonoCliente(e.target.value.replace(/\D/g, ''))}
+              />
               <button className="simple-submit" type="submit" disabled={enviando}>{enviando ? 'Confirmando...' : 'Confirmar turno'}</button>
             </form>
             <BarraPasos onPrev={() => irAlPaso(4)} />

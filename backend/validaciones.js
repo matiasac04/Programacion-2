@@ -43,9 +43,17 @@ const esIdValido = (valor) => {
 
 const errorId = (valor) => (esIdValido(valor) ? null : "El identificador no es válido.");
 
+const errorTelefono = (valor) => {
+    if (valor == null || String(valor).trim() === "") return null;
+    return /^[0-9]{6,20}$/.test(String(valor).trim())
+        ? null
+        : "El teléfono debe contener solo números (entre 6 y 20 dígitos).";
+};
+
 module.exports = {
     errorFecha,
     errorHora,
     errorPassword,
     errorId,
+    errorTelefono,
 };

@@ -2,7 +2,7 @@ const router = require("express").Router();
 
 const { sql, getPool } = require("../conexion");
 const { jwtMiddleware, requireAdmin } = require("../autenticacion");
-const { errorFecha, errorHora } = require("../validaciones");
+const { errorFecha, errorHora, errorTelefono } = require("../validaciones");
 
 const generarEmailProfesional = () => `prof_${Date.now()}_${Math.floor(Math.random() * 1000000)}@barberia.local`;
 
@@ -27,6 +27,9 @@ router.post("/profesionales", jwtMiddleware, requireAdmin, async (req, res) => {
   if (!nombre || !String(nombre).trim()) {
     return res.status(400).json({ error: "El nombre del profesional es obligatorio." });
   }
+  const errTelefono = errorTelefono(telefono);
+  if (errTelefono) return res.status(400).json({ error: errTelefono });
+  const telefonoFinal = telefono == null ? null : String(telefono).trim() || null;
   try {
     const db = await getPool();
     const apellidoFinal = apellido && String(apellido).trim() ? String(apellido).trim() : null;
@@ -36,7 +39,7 @@ router.post("/profesionales", jwtMiddleware, requireAdmin, async (req, res) => {
       .input("nombre", sql.VarChar, String(nombre).trim())
       .input("apellido", sql.VarChar, apellidoFinal)
       .input("email", sql.VarChar, emailFinal)
-      .input("telefono", sql.VarChar, telefono || null)
+      .input("telefono", sql.VarChar, telefonoFinal)
       .query(`
         INSERT INTO Profesional (nombre, apellido, email, telefono)
         OUTPUT INSERTED.idProfesional
@@ -84,8 +87,10 @@ router.patch("/profesionales/:id", jwtMiddleware, requireAdmin, async (req, res)
       reqPatch.input("apellido", sql.VarChar, req.body.apellido && String(req.body.apellido).trim() ? String(req.body.apellido).trim() : null);
     }
     if (req.body.telefono !== undefined) {
+      const errTelefono = errorTelefono(req.body.telefono);
+      if (errTelefono) return res.status(400).json({ error: errTelefono });
       set.push("telefono = @telefono");
-      reqPatch.input("telefono", sql.VarChar, req.body.telefono || null);
+      reqPatch.input("telefono", sql.VarChar, req.body.telefono == null ? null : String(req.body.telefono).trim() || null);
     }
     if (req.body.email !== undefined) {
 

@@ -48,7 +48,15 @@ function IniciarSesion({ pantallaAcceso, avisoAcceso, iniciarSesion, crearCuenta
               <input type="text" placeholder="Apellido" value={formularioRegistro.apellido} onChange={(e) => setFormularioRegistro((p) => ({ ...p, apellido: e.target.value }))} />
               <input type="email" placeholder="Mail" value={formularioRegistro.email} onChange={(e) => setFormularioRegistro((p) => ({ ...p, email: e.target.value }))} />
               <input type="password" placeholder="Contraseña (mínimo 8 caracteres)" minLength={8} maxLength={72} value={formularioRegistro.password} onChange={(e) => setFormularioRegistro((p) => ({ ...p, password: e.target.value }))} />
-              <input type="tel" placeholder="WhatsApp" value={formularioRegistro.telefono} onChange={(e) => setFormularioRegistro((p) => ({ ...p, telefono: e.target.value }))} />
+              <input
+                type="tel"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={20}
+                placeholder="WhatsApp (solo números)"
+                value={formularioRegistro.telefono}
+                onChange={(e) => setFormularioRegistro((p) => ({ ...p, telefono: e.target.value.replace(/\D/g, '') }))}
+              />
             </div>
             <button className="auth-submit primary" type="submit">Crear cuenta</button>
             <button className="auth-submit secondary" type="button" onClick={onMostrarIngreso}>Volver atrás</button>

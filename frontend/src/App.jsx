@@ -54,7 +54,7 @@ function App() {
 
   useEffect(() => { if (profesionales.length > 0 && !profesionales.some((b) => b.id === profesionalSeleccionado)) setProfesionalSeleccionado(profesionales[0].id); }, [profesionales, profesionalSeleccionado]);
   useEffect(() => { if (servicios.length > 0 && !servicios.some((s) => s.id === servicioSeleccionado)) setServicioSeleccionado(servicios[0].id); }, [servicioSeleccionado, servicios]);
-  useEffect(() => { setNombreCliente(currentUser?.name ?? ''); setTelefonoCliente(currentUser?.phone ?? ''); }, [currentUser]);
+  useEffect(() => { setNombreCliente(currentUser?.name ?? ''); setTelefonoCliente(String(currentUser?.phone ?? '').replace(/\D/g, '')); }, [currentUser]);
 
   const expulsarPorSesion = useCallback(() => {
     setToken(''); setCurrentUser(null); setTurnosConfirmados([]);
@@ -180,7 +180,7 @@ function App() {
       setTurnosConfirmados(lista.map((t) => {
         const fechaIso = fechaAIso(t.fecha), hora = normalizarHoraApi(t.horaInicio);
         const estado = estadoDelTurno(t.estado, fechaIso, hora);
-        return { id: t.idTurno, idCliente: t.idCliente ?? null, emailCliente: t.email ?? '', idProfesional: t.idProfesional ?? null, idServicio: t.idServicio ?? null, nombreProfesional: t.profesional, nombreServicio: t.servicio, precioServicio: t.precioTotal, fecha: fechaIso, hora, nombreCliente: t.nombreCliente ?? '', telefonoCliente: t.telefono ?? '', estado, ...datosDelDia(fechaIso) };
+        return { id: t.idTurno, idCliente: t.idCliente ?? null, emailCliente: t.email ?? '', idProfesional: t.idProfesional ?? null, idServicio: t.idServicio ?? null, nombreProfesional: t.profesional, nombreServicio: t.servicio, precioServicio: t.precioTotal, fecha: fechaIso, hora, nombreCliente: t.nombreCliente ?? '', telefonoCliente: String(t.telefono ?? '').replace(/\D/g, ''), estado, ...datosDelDia(fechaIso) };
       }));
     } catch (error) { if (error?.status === 401) expulsarPorSesion(); }
   }, [token, expulsarPorSesion, normalizarHoraApi]);
@@ -266,6 +266,7 @@ function App() {
   const crearCuenta = async (event) => {
     event.preventDefault(); const { nombre, apellido, email, telefono, password } = formularioRegistro;
     if (!nombre.trim() || !apellido.trim() || !email.trim() || !password.trim() || !telefono.trim()) { setAvisoAcceso({ type: 'error', message: 'Completá nombre, apellido, mail, contraseña y whatsapp para registrarte.' }); return; }
+    if (!/^[0-9]{6,20}$/.test(telefono.trim())) { setAvisoAcceso({ type: 'error', message: 'El teléfono debe contener solo números (entre 6 y 20 dígitos).' }); return; }
     if (password.length < 8) { setAvisoAcceso({ type: 'error', message: 'La contraseña tiene que tener al menos 8 caracteres.' }); return; }
     try {
       setAvisoAcceso({ type: 'idle', message: 'Creando tu cuenta...' });
@@ -303,6 +304,7 @@ function App() {
   const registrarTurno = async (event) => {
     event.preventDefault();
     if (!nombreCliente.trim() || !telefonoCliente.trim()) { setAviso({ type: 'error', message: 'Completá tu nombre y teléfono para confirmar el turno.' }); return; }
+    if (!/^[0-9]{6,20}$/.test(telefonoCliente.trim())) { setAviso({ type: 'error', message: 'El teléfono debe contener solo números (entre 6 y 20 dígitos).' }); return; }
     if (!currentUser?.idCliente) { setAviso({ type: 'error', message: 'Tu cuenta no está vinculada a un cliente de la base. Iniciá sesión con tu cuenta registrada.' }); return; }
     if (esDomingoOLunes) { setAviso({ type: 'error', message: 'No se pueden pedir turnos los domingos ni los lunes. Elegí de martes a sábado.' }); return; }
     if (fueraDeRango) { setAviso({ type: 'error', message: 'Solo se pueden pedir turnos desde hoy hasta dentro de un mes.' }); return; }
@@ -313,7 +315,7 @@ function App() {
       setAviso({ type: 'idle', message: 'Confirmando tu turno...' });
       await reservarTurno({ idCliente: currentUser.idCliente, idProfesional: profesionalSeleccionado, idServicio: servicioSeleccionado, fecha: fechaSeleccionada, horaInicio: horaSeleccionada, telefono: telefonoCliente.trim() }, token);
       setAviso({ type: 'success', message: `Turno confirmado para ${nombreCliente.trim()} con ${profesionalActual.name} (${servicioActual.name}, $${servicioActual.price.toLocaleString('es-AR')}) el ${fechaFormateada.label} ${fechaFormateada.date} a las ${horaSeleccionada}.` });
-      setNombreCliente(currentUser?.name ?? ''); setTelefonoCliente(currentUser?.phone ?? ''); setHoraSeleccionada('');
+      setNombreCliente(currentUser?.name ?? ''); setTelefonoCliente(String(currentUser?.phone ?? '').replace(/\D/g, '')); setHoraSeleccionada('');
       cargarDisponibilidad(); refrescarOcupados(); if (currentUser?.role === 'admin') await cargarTurnosAdmin(); else await cargarMisTurnos();
     } catch (error) { setAviso({ type: 'error', message: error.message || 'Error al reservar el turno.' }); }
     finally { setSubmitting(false); }
@@ -355,8 +357,10 @@ function App() {
   };
   const registrarProfesional = async (nombreCompleto, email, telefono) => {
     const { nombre, apellido } = dividirNombre(nombreCompleto);
+    const tel = String(telefono ?? '').trim();
+    if (tel && !/^[0-9]{6,20}$/.test(tel)) return { ok: false, error: 'El teléfono debe contener solo números (entre 6 y 20 dígitos).' };
     try {
-      await crearProfesional({ nombre, apellido, email: email?.trim() || null, telefono: telefono?.trim() || null }, token);
+      await crearProfesional({ nombre, apellido, email: email?.trim() || null, telefono: tel || null }, token);
       await cargarProfesionales();
       await cargarTodosProfesionales();
       return { ok: true };
@@ -364,8 +368,10 @@ function App() {
   };
   const editarProfesional = async (id, nombreCompleto, email, telefono) => {
     const { nombre, apellido } = dividirNombre(nombreCompleto);
+    const tel = String(telefono ?? '').trim();
+    if (tel && !/^[0-9]{6,20}$/.test(tel)) return { ok: false, error: 'El teléfono debe contener solo números (entre 6 y 20 dígitos).' };
     try {
-      await actualizarProfesional(id, { nombre, apellido, email: email?.trim() || null, telefono: telefono?.trim() || null }, token);
+      await actualizarProfesional(id, { nombre, apellido, email: email?.trim() || null, telefono: tel || null }, token);
       await cargarProfesionales();
       await cargarTodosProfesionales();
       return { ok: true };

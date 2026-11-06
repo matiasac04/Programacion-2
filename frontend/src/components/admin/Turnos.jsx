@@ -21,7 +21,15 @@ function Turnos({ profesionales, formularioTurno, etiquetasEstado, clasesEstado,
         <form className="admin-form admin-booking-form" onSubmit={onGuardarTurno}>
           <div className="admin-inline-grid">
             <input type="text" placeholder="Nombre del cliente" value={formularioTurno.nombreCliente} onChange={(e) => onCambioFormularioTurno((p) => ({ ...p, nombreCliente: e.target.value }))} />
-            <input type="tel" placeholder="Celular" value={formularioTurno.telefonoCliente} onChange={(e) => onCambioFormularioTurno((p) => ({ ...p, telefonoCliente: e.target.value }))} />
+            <input
+              type="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={20}
+              placeholder="Celular (solo números)"
+              value={formularioTurno.telefonoCliente}
+              onChange={(e) => onCambioFormularioTurno((p) => ({ ...p, telefonoCliente: e.target.value.replace(/\D/g, '') }))}
+            />
           </div>
           <div className="admin-inline-grid">
             <select value={formularioTurno.idProfesional} onChange={(e) => onCambioFormularioTurno((p) => ({ ...p, idProfesional: e.target.value }))}>

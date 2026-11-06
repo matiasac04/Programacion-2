@@ -2,7 +2,7 @@ const router = require("express").Router();
 
 const { sql, getPool } = require("../conexion");
 const { jwtMiddleware, requireAdmin } = require("../autenticacion");
-const { errorFecha, errorId } = require("../validaciones");
+const { errorFecha, errorId, errorTelefono } = require("../validaciones");
 const { enviarMail, htmlConfirmacionTurno, formatearFecha } = require("../mailer");
 
 const MS_24H = 24 * 60 * 60 * 1000;
@@ -176,6 +176,16 @@ router.post("/turnos", jwtMiddleware, async (req, res) => {
     return res.status(400).json({ error: "Cliente, profesional, servicio, fecha y horario son obligatorios." });
   }
 
+  for (const [campo, valor] of Object.entries({ idCliente, idProfesional, idServicio })) {
+    if (errorId(valor)) {
+      return res.status(400).json({ error: `El campo ${campo} no es un identificador válido.` });
+    }
+  }
+
+  const errTelefono = errorTelefono(telefono);
+  if (errTelefono) return res.status(400).json({ error: errTelefono });
+  const telefonoFinal = telefono == null ? null : String(telefono).trim() || null;
+
   const hora = normalizarHora(horaInicio);
   if (!hora) {
     return res.status(400).json({ error: "El horario no tiene un formato válido (se espera HH:MM)." });
@@ -257,7 +267,7 @@ router.post("/turnos", jwtMiddleware, async (req, res) => {
         .input("horaInicio", sql.VarChar, hora)
         .input("duracion", sql.Int, duracion_minutos)
         .input("precio", sql.Decimal(10, 2), precio)
-        .input("telefono", sql.VarChar, telefono || null)
+        .input("telefono", sql.VarChar, telefonoFinal)
         .input("estado", sql.VarChar, 'Confirmado')
         .query(`
           INSERT INTO Turno (idProfesional, idCliente, idServicio, fecha, horaInicio, duracionReal, precioTotal, telefono, estado)
@@ -286,6 +296,8 @@ router.post("/turnos", jwtMiddleware, async (req, res) => {
 });
 
 router.patch("/turnos/:id/cancelar", jwtMiddleware, async (req, res) => {
+  const errId = errorId(req.params.id);
+  if (errId) return res.status(400).json({ error: errId });
   try {
     const db = await getPool();
     const turno = await db.request()
@@ -311,11 +323,25 @@ router.patch("/turnos/:id/cancelar", jwtMiddleware, async (req, res) => {
 
 router.patch("/turnos/:id", jwtMiddleware, async (req, res) => {
   const { idProfesional, idServicio, fecha, horaInicio, estado, nombreCliente, telefono } = req.body;
+  const errIdUrl = errorId(req.params.id);
+  if (errIdUrl) return res.status(400).json({ error: errIdUrl });
+  if (idProfesional !== undefined && errorId(idProfesional)) {
+    return res.status(400).json({ error: "El campo idProfesional no es un identificador válido." });
+  }
+  if (idServicio !== undefined && errorId(idServicio)) {
+    return res.status(400).json({ error: "El campo idServicio no es un identificador válido." });
+  }
+  let telefonoFinal = telefono;
+  if (telefono !== undefined) {
+    const errTelefono = errorTelefono(telefono);
+    if (errTelefono) return res.status(400).json({ error: errTelefono });
+    telefonoFinal = telefono == null ? null : String(telefono).trim() || null;
+  }
   try {
     const db = await getPool();
     const turno = await db.request()
       .input("id", sql.Int, req.params.id)
-      .query("SELECT idCliente, idProfesional, fecha, CONVERT(varchar(10), fecha, 23) AS fechaIso, CONVERT(varchar(5), horaInicio, 108) AS horaIso FROM Turno WHERE idTurno = @id");
+      .query("SELECT idCliente, idProfesional, idServicio, duracionReal, precioTotal, fecha, CONVERT(varchar(10), fecha, 23) AS fechaIso, CONVERT(varchar(5), horaInicio, 108) AS horaIso FROM Turno WHERE idTurno = @id");
     if (turno.recordset.length === 0) return res.status(404).json({ error: "Turno no encontrado." });
     const turnoActual = turno.recordset[0];
     const idCliente = turnoActual.idCliente;
@@ -356,6 +382,21 @@ router.patch("/turnos/:id", jwtMiddleware, async (req, res) => {
       }
     }
 
+    let servicioCambio = false;
+    let duracionFinal = Number(turnoActual.duracionReal) > 0 ? Number(turnoActual.duracionReal) : SLOTS_POR_DIA;
+    let precioFinal = turnoActual.precioTotal;
+    if (idServicio !== undefined && Number(idServicio) !== Number(turnoActual.idServicio)) {
+      const servicio = await db.request()
+        .input("idServicio", sql.Int, idServicio)
+        .query("SELECT precio, duracion_minutos FROM Servicio WHERE idServicio = @idServicio");
+      if (servicio.recordset.length === 0) {
+        return res.status(404).json({ error: "El servicio elegido no existe." });
+      }
+      duracionFinal = Number(servicio.recordset[0].duracion_minutos);
+      precioFinal = servicio.recordset[0].precio;
+      servicioCambio = true;
+    }
+
     const profFinal = idProfesional != null ? idProfesional : turnoActual.idProfesional;
     const fechaFinal = fecha !== undefined ? fecha : turnoActual.fechaIso;
     const horaFinal = horaInicio !== undefined ? normalizarHora(horaInicio) : turnoActual.horaIso;
@@ -391,7 +432,15 @@ router.patch("/turnos/:id", jwtMiddleware, async (req, res) => {
       const set = [];
       const reqPatch = new sql.Request(transaction).input("id", sql.Int, req.params.id);
       if (idProfesional !== undefined) { set.push("idProfesional = @idProfesional"); reqPatch.input("idProfesional", sql.Int, idProfesional); }
-      if (idServicio !== undefined) { set.push("idServicio = @idServicio"); reqPatch.input("idServicio", sql.Int, idServicio); }
+      if (idServicio !== undefined) {
+        set.push("idServicio = @idServicio");
+        reqPatch.input("idServicio", sql.Int, idServicio);
+      }
+      if (servicioCambio) {
+        set.push("duracionReal = @duracion", "precioTotal = @precio");
+        reqPatch.input("duracion", sql.Int, duracionFinal);
+        reqPatch.input("precio", sql.Decimal(10, 2), precioFinal);
+      }
       if (fecha !== undefined) { set.push("fecha = @fecha"); reqPatch.input("fecha", sql.Date, fecha); }
       if (horaInicio !== undefined) { set.push("horaInicio = @horaInicio"); reqPatch.input("horaInicio", sql.VarChar, horaFinal); }
       if (estado !== undefined) {
@@ -409,7 +458,7 @@ router.patch("/turnos/:id", jwtMiddleware, async (req, res) => {
           cReq.input("nombre", sql.VarChar, partes[0] ?? '');
           cReq.input("apellido", sql.VarChar, partes.slice(1).join(' ') || '');
         }
-        if (telefono !== undefined) { cs.push("telefono = @telefono"); cReq.input("telefono", sql.VarChar, telefono || null); }
+        if (telefono !== undefined) { cs.push("telefono = @telefono"); cReq.input("telefono", sql.VarChar, telefonoFinal); }
         if (cs.length > 0) await cReq.query(`UPDATE Cliente SET ${cs.join(", ")} WHERE idCliente = @idCliente`);
       }
 
@@ -430,6 +479,8 @@ router.delete("/turnos/:id", jwtMiddleware, async (req, res) => {
     if (req.user.role !== 'admin') {
       return res.status(403).json({ error: "Solo el administrador puede eliminar turnos." });
     }
+    const errId = errorId(req.params.id);
+    if (errId) return res.status(400).json({ error: errId });
     const db = await getPool();
     const result = await db.request()
       .input("id", sql.Int, req.params.id)
