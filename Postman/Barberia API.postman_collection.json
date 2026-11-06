@@ -1,0 +1,875 @@
+{
+  "info": {
+    "_postman_id": "7b9eaa23-0e95-419d-8bed-71f5861ab667",
+    "name": "Barberia API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54533515",
+    "_collection_link": "https://go.postman.co/collection/54533515-7b9eaa23-0e95-419d-8bed-71f5861ab667?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Registro",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"Matias\",\r\n  \"apellido\": \"Prueba\",\r\n  \"email\": \"prueba.postman@gmail.com\",\r\n  \"telefono\": \"1122334455\",\r\n  \"password\": \"12345678\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{Url}}/registro",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "registro"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login Cliente",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "prueba.postman@gmail.com",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "12345678",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{Url}}/login",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verificar Token",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{Url}}/verificar",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "verificar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login Admin",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{Url}}/login",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Recuperar Contraseña",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"matuterc2004@gmail.com\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{Url}}/recuperar",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "recuperar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Restablecer Contraseña",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"token\": \"e241da94d452e5376a3c2c63bae29c26ce0199a8f659ec2b721e7aa48a8d4eee\",\r\n  \"password\": \"87654321\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{Url}}/restablecer",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "restablecer"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Catálogo",
+      "item": [
+        {
+          "name": "Servicios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{Url}}/servicios",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "servicios"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Profesionales",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{Url}}/profesionales",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "profesionales"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Horarios",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{Url}}/horarios",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "horarios"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ver Bloqueos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{Url}}/bloqueos",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "bloqueos"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Cliente",
+      "item": [
+        {
+          "name": "Turnos Disponibles",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{Url}}/turnos/disponibles?fecha=2026-11-10&idProfesional=1",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "turnos",
+                "disponibles"
+              ],
+              "query": [
+                {
+                  "key": "fecha",
+                  "value": "2026-11-10"
+                },
+                {
+                  "key": "idProfesional",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reservar Turno",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"idCliente\": 23,\r\n  \"idProfesional\": 2,\r\n  \"idServicio\": 2,\r\n  \"fecha\": \"2026-11-11\",\r\n  \"horaInicio\": \"10:00\",\r\n  \"telefono\": \"5675675\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{Url}}/turnos",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "turnos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mis Turnos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{Url}}/clientes/{{idCliente}}/turnos",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "clientes",
+                "{{idCliente}}",
+                "turnos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reprogramar Turno",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"fecha\": \"2026-11-10\",\r\n  \"horaInicio\": \"11:00\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{Url}}/turnos/{{idTurno}}",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "turnos",
+                "{{idTurno}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancelar Turno",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{Url}}/turnos/{{idTurno}}/cancelar",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "turnos",
+                "{{idTurno}}",
+                "cancelar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ver Turnos Ocupados",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{Url}}/turnos/ocupados?inicio=2026-11-06&fin=2026-11-30",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "turnos",
+                "ocupados"
+              ],
+              "query": [
+                {
+                  "key": "inicio",
+                  "value": "2026-11-06"
+                },
+                {
+                  "key": "fin",
+                  "value": "2026-11-30"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Ver Agenda Admin",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{Url}}/turnos",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "turnos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar Estado de un Turno",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"estado\": \"Completado\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{Url}}/turnos/{{idTurno}}",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "turnos",
+                "{{idTurno}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Agregar Servicio",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"Tintura\",\r\n  \"precio\": 70000,\r\n  \"duracion_minutos\": 60\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{Url}}/servicios",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "servicios"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modificar Servicio",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"Color\",\r\n  \"precio\": 75000,\r\n  \"duracion_minutos\": 60\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{Url}}/servicios/{{idServicio}}",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "servicios",
+                "{{idServicio}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Servicio",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{Url}}/servicios/{{idServicio}}",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "servicios",
+                "{{idServicio}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Agregar Profesional",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"Profesional Test\",\r\n  \"apellido\": \"Postman\",\r\n  \"email\": \"profesional.test.postman@gmail.com\",\r\n  \"telefono\": \"1122334455\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{Url}}/profesionales",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "profesionales"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modificar Profesional",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"Profesional Test Modificado\",\r\n  \"telefono\": \"1199887766\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{Url}}/profesionales/{{idProfesional}}",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "profesionales",
+                "{{idProfesional}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Guardar Horarios",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"horarios\": [\r\n    { \"diaSemana\": 2, \"horaEntrada\": \"09:00\", \"horaSalida\": \"18:00\" },\r\n    { \"diaSemana\": 3, \"horaEntrada\": \"09:00\", \"horaSalida\": \"18:00\" },\r\n    { \"diaSemana\": 4, \"horaEntrada\": \"09:00\", \"horaSalida\": \"18:00\" },\r\n    { \"diaSemana\": 5, \"horaEntrada\": \"09:00\", \"horaSalida\": \"18:00\" },\r\n    { \"diaSemana\": 6, \"horaEntrada\": \"09:00\", \"horaSalida\": \"13:00\" }\r\n  ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{Url}}/profesionales/{{idProfesional}}/horarios",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "profesionales",
+                "{{idProfesional}}",
+                "horarios"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Bloqueo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"fecha\": \"2026-11-13\",\r\n  \"diaCompleto\": true\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{Url}}/profesionales/{{idProfesional}}/bloqueos",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "profesionales",
+                "{{idProfesional}}",
+                "bloqueos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Profesional",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{Url}}/profesionales/{{idProfesional}}",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "profesionales",
+                "{{idProfesional}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Turno",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{Url}}/turnos/{{idTurno}}",
+              "host": [
+                "{{Url}}"
+              ],
+              "path": [
+                "turnos",
+                "{{idTurno}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
